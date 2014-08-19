@@ -88,9 +88,9 @@ draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
 
 # Load default font.
 # font = ImageFont.load_default()
-font_size = 12
-font = ImageFont.truetype('profont.ttf', font_size)
-(cw, ch) = font.getsize("A");
+font_size = 16
+font = ImageFont.truetype('fonts/Tinymoon.ttf', font_size)
+c_w, c_h = 6, 8 # font.getsize("A");
 
 # Alternatively load a TTF font.
 # Some nice fonts to try: http://www.dafont.com/bitmap.php
@@ -99,24 +99,25 @@ font = ImageFont.truetype('profont.ttf', font_size)
   
 def draw_text(txt):
   draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-  x, y = 0, 0
-  cc = 84 / cw
-  # lc = 8 # 48 / ch
+  col, row = 0, 0
+  ncol = 84 / c_w
+  yoff = -5
+  # lc = 8 # 48 / c_h
   for c in txt:
     # print(c)
     if c == '\n':
-      y = y + 1
-      x = 0
+      row = row + 1
+      col = 0
     else:
       #if c == 'i' or c == 'I' or c == 'l':
       #  offset = 2
-      print('x = ' + str(x * cw) + ', y = ' + str(y * 8))
-      draw.text((x * cw, y * ch), c, font=font)
-      x = x + 1
-      if x == cc:
-        x = 0
-        y = y + 1
-  draw.text((x * cw, y * ch), '_', font=font)
+      print('x = ' + str(col * c_w) + ', y = ' + str(row * c_h))
+      draw.text((col * c_w, row * c_h + yoff), c, font=font)
+      col = col + 1
+      if col == ncol:
+        col = 0
+        row = row + 1
+  draw.text((col * c_w, row * c_h + yoff), '_', font=font)
   disp.image(image)
   disp.display()
 
@@ -161,7 +162,7 @@ def get_input():
   msg = ''
 
   try:
-    while 1:
+    while True:
       try:
         c = sys.stdin.read(1)
         # print "Got character", repr(c)
