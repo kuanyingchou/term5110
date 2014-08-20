@@ -28,154 +28,126 @@ import Image
 import ImageDraw
 import ImageFont
 
-
+class Tinyvim: 
 # Raspberry Pi hardware SPI config:
-DC = 23
-RST = 24
-SPI_PORT = 0
-SPI_DEVICE = 0
+  def __init__(self):
+    self.DC = 23
+    self.RST = 24
+    self.SPI_PORT = 0
+    self.SPI_DEVICE = 0
 
-# Raspberry Pi software SPI config:
-# SCLK = 4
-# DIN = 17
-# DC = 23
-# RST = 24
-# CS = 8
+    # Hardware SPI usage:
+    self.disp = LCD.PCD8544(
+        self.DC, self.RST, 
+        spi=SPI.SpiDev(self.SPI_PORT, self.SPI_DEVICE, 
+        max_speed_hz=4000000))
 
-# Beaglebone Black hardware SPI config:
-# DC = 'P9_15'
-# RST = 'P9_12'
-# SPI_PORT = 1
-# SPI_DEVICE = 0
+    # Software SPI usage (defaults to bit-bang SPI interface):
+    #disp = LCD.PCD8544(DC, RST, SCLK, DIN, CS)
 
-# Beaglebone Black software SPI config:
-# DC = 'P9_15'
-# RST = 'P9_12'
-# SCLK = 'P8_7'
-# DIN = 'P8_9'
-# CS = 'P8_11'
+    # Initialize library.
+    self.disp.begin(contrast=60)
+
+    # Clear display.
+    self.disp.clear()
+    self.disp.display()
+
+    # Raspberry Pi software SPI config:
+    # SCLK = 4
+    # DIN = 17
+    # DC = 23
+    # RST = 24
+    # CS = 8
 
 
-# Hardware SPI usage:
-disp = LCD.PCD8544(DC, RST, spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE, max_speed_hz=4000000))
+    # Create blank image for drawing.
+    # Make sure to create image with mode '1' for 1-bit color.
+    self.image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
 
-# Software SPI usage (defaults to bit-bang SPI interface):
-#disp = LCD.PCD8544(DC, RST, SCLK, DIN, CS)
+    # Get drawing object to draw on image.
+    self.draw = ImageDraw.Draw(self.image)
 
-# Initialize library.
-disp.begin(contrast=60)
+    # Draw a white filled box to clear the image.
+    self.draw.rectangle(
+        (0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
+    # font = ImageFont.load_default()
 
-# Clear display.
-disp.clear()
-disp.display()
-
-# Create blank image for drawing.
-# Make sure to create image with mode '1' for 1-bit color.
-image = Image.new('1', (LCD.LCDWIDTH, LCD.LCDHEIGHT))
-
-# Get drawing object to draw on image.
-draw = ImageDraw.Draw(image)
-
-# Draw a white filled box to clear the image.
-draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-#
-## Draw some shapes.
-#draw.ellipse((2,2,22,22), outline=0, fill=255)
-#draw.rectangle((24,2,44,22), outline=0, fill=255)
-#draw.polygon([(46,22), (56,2), (66,22)], outline=0, fill=255)
-#draw.line((68,22,81,2), fill=0)
-#draw.line((68,2,81,22), fill=0)
-
-# Load default font.
-# font = ImageFont.load_default()
-font_size = 16
-font = ImageFont.truetype('fonts/Tinymoon.ttf', font_size)
-c_w, c_h = 6, 8 # font.getsize("A");
-
-# Alternatively load a TTF font.
-# Some nice fonts to try: http://www.dafont.com/bitmap.php
-# font = ImageFont.truetype('Minecraftia.ttf', 8)
-
+  def set_5x7(self):
+    self.font_size = 16
+    self.font = ImageFont.truetype('fonts/Tinymoon5x7.ttf', 
+        self.font_size)
+    self.c_w = 6
+    self.c_h = 8 # font.getsize("A");
+    self.yoff = -5
+    self.xoff = 0
   
-def draw_text(txt):
-  draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-  col, row = 0, 0
-  ncol = 84 / c_w
-  yoff = -5
-  # lc = 8 # 48 / c_h
-  for c in txt:
-    # print(c)
-    if c == '\n':
-      row = row + 1
-      col = 0
-    else:
-      #if c == 'i' or c == 'I' or c == 'l':
-      #  offset = 2
-      print('x = ' + str(col * c_w) + ', y = ' + str(row * c_h))
-      draw.text((col * c_w, row * c_h + yoff), c, font=font)
-      col = col + 1
-      if col == ncol:
-        col = 0
+  def set_5x9(self):
+    self.font_size = 16
+    self.font = ImageFont.truetype('fonts/Tinymoon5x9.ttf', 
+        self.font_size)
+    self.c_w = 6
+    self.c_h = 9 # font.getsize("A");
+    self.yoff = -4
+    self.xoff = -1
+  
+  def draw_text(self, txt):
+    self.draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
+    col, row = 0, 0
+    ncol = 84 / self.c_w
+    # lc = 8 # 48 / c_h
+    for c in txt:
+      # print(c)
+      if c == '\n':
         row = row + 1
-  draw.text((col * c_w, row * c_h + yoff), '_', font=font)
-  disp.image(image)
-  disp.display()
-
-# draw_text("hi!\nI'm teddy.")
-
-## test chars
-# draw_text("abcdefghijklmnop\nopqrstuvwxyz\n!@#$%^&*()_\n+|{}[]:;'")
-## test wrapping
-# draw_text("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopopqrstuvwxyz")
-## hello, world
-# draw_text("hello, world...")
-# draw_text("ken@pi$ ")
-
-# while True:
-#   draw.rectangle((0,0,LCD.LCDWIDTH,LCD.LCDHEIGHT), outline=255, fill=255)
-#   # prompt = prompt + ch
-#   draw.text((0,0),  'ABCDEFGHIJKLMN', font=font)
-#   draw.text((0,8),  'OPQRSTUVWXYZab', font=font)
-#   draw.text((0,16), 'cdefghijklmnop', font=font)
-#   draw.text((0,24), 'qrstuvwxyz', font=font)
-#   draw.text((0,32), 'qrstuvwxyz', font=font)
-#   draw.text((0,40), 'gjA', font=font)
-# 
-# 
-#   disp.image(image)
-#   disp.display()
-# 
-#   time.sleep(1.0)
-
-def get_input():
-  import termios, fcntl, sys, os
-  fd = sys.stdin.fileno()
+        col = 0
+      else:
+        #if c == 'i' or c == 'I' or c == 'l':
+        #  offset = 2
+        print('x = ' + str(col * self.c_w) + ', y = ' + 
+            str(row * self.c_h))
+        self.draw.text((col * self.c_w + self.xoff, 
+            row * self.c_h + self.yoff), c, font=self.font)
+        col = col + 1
+        if col == ncol:
+          col = 0
+          row = row + 1
+    self.draw.text((col * self.c_w, 
+        row * self.c_h + self.yoff), '_', font=self.font)
+    self.disp.image(self.image)
+    self.disp.display()
   
-  oldterm = termios.tcgetattr(fd)
-  newattr = termios.tcgetattr(fd)
-  newattr[3] = newattr[3] & ~termios.ICANON & ~termios.ECHO
-  termios.tcsetattr(fd, termios.TCSANOW, newattr)
+  def get_input(self):
+    import termios, fcntl, sys, os
+    fd = sys.stdin.fileno()
+    
+    oldterm = termios.tcgetattr(fd)
+    newattr = termios.tcgetattr(fd)
+    newattr[3] = newattr[3] & ~termios.ICANON & ~termios.ECHO
+    termios.tcsetattr(fd, termios.TCSANOW, newattr)
+    
+    oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
+    fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+    
+    msg = ''
   
-  oldflags = fcntl.fcntl(fd, fcntl.F_GETFL)
-  fcntl.fcntl(fd, fcntl.F_SETFL, oldflags | os.O_NONBLOCK)
+    try:
+      while True:
+        try:
+          c = sys.stdin.read(1)
+          # print "Got character", repr(c)
+          msg = msg + c
+          self.draw_text(msg)
+          # if c == '\n':
+          #   msg = msg + os.system(msg)
+        except IOError: pass
+    finally:
+      termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
+      fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
   
-  msg = ''
-
-  try:
-    while True:
-      try:
-        c = sys.stdin.read(1)
-        # print "Got character", repr(c)
-        msg = msg + c
-        draw_text(msg)
-        # if c == '\n':
-        #   msg = msg + os.system(msg)
-      except IOError: pass
-  finally:
-    termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
-    fcntl.fcntl(fd, fcntl.F_SETFL, oldflags)
-
 if __name__ == '__main__':
   print 'Press Ctrl-C to quit.'
-  draw_text('')
-  get_input()
+  vim = Tinyvim()
+  # vim.set_5x9()
+  vim.set_5x7()
+  vim.draw_text('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890!?@#$%^&*()[]{}-+=:;<>')
+  #get_input()
